@@ -39,6 +39,8 @@ class BDSpider(scrapy.Spider):
         # List of all social links that the business has
         social = response.css('.entry-content > div:nth-child(2) a::attr(href)').extract()
 
+        add_info = response.css('ul.list-border li').extract()
+
         yield {
             'title': response.css('h1.entry-title::text').extract_first().strip(),
             'description': response.css('p.mb-double::text').extract_first(),
