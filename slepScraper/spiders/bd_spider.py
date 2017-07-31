@@ -3,6 +3,8 @@ from scrapy import Request
 from bs4 import BeautifulSoup
 
 
+# Add location so that it doesn't cause an IndexError
+# e.g http://www.sarnialambton.on.ca/business/cranberrys-catering
 class BDSpider(scrapy.Spider):
     name = "bd"
     start_urls = [
@@ -28,6 +30,8 @@ class BDSpider(scrapy.Spider):
 
     def parse_page(self, response):
         url = response.meta.get('URL')
+        city = ""
+        province = ""
         website = ""
         facebook = ""
         twitter = ""
@@ -36,6 +40,7 @@ class BDSpider(scrapy.Spider):
         key_contact = ""
         naics = ""
         employees = ""
+        tags = ""
 
         # Parse the locations area of the page
         locations = response.css('address::text').extract()
@@ -45,6 +50,22 @@ class BDSpider(scrapy.Spider):
         # List of all social links that the business has
         social = response.css('.entry-content > div:nth-child(2) a::attr(href)').extract()
         add_info = response.css('ul.list-border li').extract()
+
+        # try and except's for city, province and tags to avoid IndexErrors
+        try:
+            city = city_province.split(',', 1)[0]
+        except:
+            pass
+
+        try:
+            province = city_province.split(',', 1)[1].strip()
+        except:
+            pass
+
+        try:
+            tags = response.css('ul.biz-tags li a::text').extract()
+        except:
+            pass
 
         for link in social:
             soup = BeautifulSoup(link)
@@ -84,8 +105,8 @@ class BDSpider(scrapy.Spider):
             'phone_number': response.css('div.mb-double ul li::text').extract_first(default="").strip(),
             'email': response.css('div.mb-double ul li a::text').extract_first(default=""),
             'address': locations[0].strip(),
-            'city': city_province.split(',', 1)[0],
-            'province': city_province.split(',', 1)[1].strip(),
+            'city': city,
+            'province': province,
             'zip_code': locations[2].strip(),
             'website': website,
             'facebook': facebook,
@@ -95,5 +116,5 @@ class BDSpider(scrapy.Spider):
             'employees': employees,
             'key_contact': key_contact,
             'naics': naics,
-            'tags': response.css('ul.biz-tags li a::text').extract(),
+            'tags': tags,
         }
