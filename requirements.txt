@@ -1,10 +1,12 @@
 asn1crypto==0.22.0
 attrs==17.2.0
 Automat==0.6.0
+beautifulsoup4==4.6.0
 cffi==1.10.0
 constantly==15.1.0
 cryptography==2.0
 cssselect==1.0.1
+html2text==2016.9.19
 hyperlink==17.3.0
 idna==2.5
 incremental==17.5.0

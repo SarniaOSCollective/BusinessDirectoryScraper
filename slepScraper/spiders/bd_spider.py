@@ -1,9 +1,7 @@
 import scrapy
 from scrapy import Request
+from bs4 import BeautifulSoup
 
-
-# TODO: Next page doesn't work on page 10. Fix this.
-# TODO: Make sure all data is being selected properly (year is not set correctly)
 
 class BDSpider(scrapy.Spider):
     name = "bd"
@@ -30,6 +28,14 @@ class BDSpider(scrapy.Spider):
 
     def parse_page(self, response):
         url = response.meta.get('URL')
+        website = ""
+        facebook = ""
+        twitter = ""
+        linkedin = ""
+        year = ""
+        key_contact = ""
+        naics = ""
+        employees = ""
 
         # Parse the locations area of the page
         locations = response.css('address::text').extract()
@@ -38,8 +44,39 @@ class BDSpider(scrapy.Spider):
         city_province = locations[1].replace(u'\xa0', u' ').strip()
         # List of all social links that the business has
         social = response.css('.entry-content > div:nth-child(2) a::attr(href)').extract()
-
         add_info = response.css('ul.list-border li').extract()
+
+        for link in social:
+            soup = BeautifulSoup(link)
+            if 'facebook' in link:
+                text = soup.get_text()
+                facebook = text
+            elif 'twitter' in link:
+                text = soup.get_text()
+                twitter = text
+            elif 'linkedin' in link:
+                text = soup.get_text()
+                linkedin = text
+            else:
+                pass
+
+        for info in add_info:
+            soup = BeautifulSoup(info)
+            if 'Year' in info:
+                # If the row has "Year" extract using BeautifulSoup and get the last 4
+                text = soup.get_text()
+                year = text[-4:]
+            elif 'Key' in info:
+                text = soup.get_text()
+                key_contact = text.replace('Key Contact: ', '')
+            elif 'NAICS' in info:
+                text = soup.get_text()
+                naics = text.replace('NAICS Code: ', '')
+            elif 'F/T' in info:
+                text = soup.get_text()
+                employees = text.replace('F/T Employees: ', '')
+            else:
+                pass
 
         yield {
             'title': response.css('h1.entry-title::text').extract_first().strip(),
@@ -47,16 +84,16 @@ class BDSpider(scrapy.Spider):
             'phone_number': response.css('div.mb-double ul li::text').extract_first(default="").strip(),
             'email': response.css('div.mb-double ul li a::text').extract_first(default=""),
             'address': locations[0].strip(),
-            'city': city_province.split(' ', 1)[0].replace(',', ''),
-            'province': city_province.split(' ', 1)[1].replace(',', '').strip(),
+            'city': city_province.split(',', 1)[0],
+            'province': city_province.split(',', 1)[1].strip(),
             'zip_code': locations[2].strip(),
-            'website': response.css('.entry-content > div:nth-child(2) > ul:nth-child(2) > li:nth-child(1) > a:nth-child(1)::attr(href)').extract_first(default=''),
-            'facebook': response.css('.entry-content > div:nth-child(2) > ul:nth-child(2) > li:nth-child(2) > a:nth-child(1)::attr(href)').extract_first(default=''),
-            'twitter': response.css('.entry-content > div:nth-child(2) > ul:nth-child(2) > li:nth-child(3) > a:nth-child(1)::attr(href)').extract_first(default=''),
-            'linkedin': response.css('.entry-content > div:nth-child(2) > ul:nth-child(2) > li:nth-child(4) > a:nth-child(1)::attr(href)').extract_first(default=''),
-            'year': response.css('.list-border > li:nth-child(1)::text').extract_first(default="").strip(),
-            'employees': response.css('.list-border > li:nth-child(2)::text').extract_first(default="").strip(),
-            'key_contact': response.css('.list-border > li:nth-child(3)::text').extract_first(default="").strip(),
-            'naics': response.css('.list-border > li:nth-child(4)::text').extract_first(default="").strip(),
+            'website': website,
+            'facebook': facebook,
+            'twitter': twitter,
+            'linkedin': linkedin,
+            'year': year,
+            'employees': employees,
+            'key_contact': key_contact,
+            'naics': naics,
             'tags': response.css('ul.biz-tags li a::text').extract(),
         }
