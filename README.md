@@ -10,7 +10,7 @@ Requirements:
 
 ## Instructions
 
-- Install Requirements
 - `git clone` this repository
+- Install Requirements by doing `pip install -r requirements.txt`
 - `cd` into directory then run: `scrapy crawl bd -o bd.json`
-- Enjoy the data!
+- Enjoy the data! This may take a while (It took me a whole episode of F.R.I.E.N.D.S. to finish)
